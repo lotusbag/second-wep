@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 30%, #ffecd2 50%, #ffc3a0 70%, #ffecd2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar {
+            width: 100%;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 40px 12px 20px;
+            border: 2px solid #ffd6da;
+            border-radius: 25px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            border-color: #fd79a8;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(253, 121, 168, 0.1);
+        }
+
+        .search-bar .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .tag-input {
+            padding: 12px 16px;
+            border: 2px solid #ffd6da;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            width: 120px;
+        }
+
+        .tag-input:focus {
+            border-color: #fd79a8;
+            box-shadow: 0 0 0 3px rgba(253, 121, 168, 0.1);
+        }
+
+        .tag-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tag-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(108, 92, 231, 0.4);
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%) !important;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4) !important;
+        }
+
+        .export-btn:hover {
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.5) !important;
+        }
+
+        .priority-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .priority-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .priority-btn.priority-high {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+        }
+
+        .priority-btn.priority-medium {
+            background: linear-gradient(135deg, #ffa502 0%, #ff8c00 100%);
+            color: white;
+        }
+
+        .priority-btn.priority-low {
+            background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+            color: white;
+        }
+
+        .priority-btn.active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 3px solid #fff;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #fd79a8;
+            box-shadow: 0 0 0 3px rgba(253, 121, 168, 0.1);
+        }
+
+        button {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #ff7675 0%, #fd79a8 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(253, 121, 168, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(253, 121, 168, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .clear-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: none;
+        }
+
+        .clear-btn:hover {
+            background: #5a6268;
+            transform: none;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fd79a8;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .todo-list {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: #fff5f5;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #fd79a8;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .todo-item.priority-high {
+            border-left-color: #ff6b6b;
+            background: #fff0f0;
+        }
+
+        .todo-item.priority-medium {
+            border-left-color: #ffa502;
+            background: #fffaf0;
+        }
+
+        .todo-item.priority-low {
+            border-left-color: #ff9ff3;
+            background: #fff0ff;
+        }
+
+        .todo-item.deleting {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        .todo-item:hover {
+            background: #e9ecef;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .delete-btn, .edit-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: none;
+            margin-left: 5px;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+        }
+
+        .edit-btn {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #138496;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(23, 162, 184, 0.4);
+        }
+
+        .edit-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .priority-badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+
+        .priority-badge.high {
+            background: #ff6b6b;
+        }
+
+        .priority-badge.medium {
+            background: #ffa502;
+        }
+
+        .priority-badge.low {
+            background: #ff9ff3;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .cute-illustration {
+            position: relative;
+            height: 180px;
+            margin-bottom: 20px;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .cloud-1 {
+            width: 60px;
+            height: 30px;
+            top: 30px;
+            left: 50px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .cloud-2 {
+            width: 40px;
+            height: 20px;
+            top: 50px;
+            right: 60px;
+            animation: float 5s ease-in-out infinite 1s;
+        }
+
+        .rainbow {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 60px;
+            border-radius: 60px 60px 0 0;
+            background: linear-gradient(90deg, 
+                rgba(255, 0, 0, 0.3), 
+                rgba(255, 127, 0, 0.3), 
+                rgba(255, 255, 0, 0.3), 
+                rgba(0, 255, 0, 0.3), 
+                rgba(0, 0, 255, 0.3), 
+                rgba(75, 0, 130, 0.3), 
+                rgba(148, 0, 211, 0.3));
+            animation: rainbowGlow 3s ease-in-out infinite;
+        }
+
+        .star {
+            position: absolute;
+            font-size: 24px;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        .star-1 {
+            top: 25px;
+            right: 30px;
+            animation-delay: 0s;
+        }
+
+        .star-2 {
+            top: 45px;
+            left: 30px;
+            animation-delay: 0.5s;
+        }
+
+        .star-3 {
+            top: 70px;
+            right: 80px;
+            animation-delay: 1s;
+        }
+
+        .flower {
+            position: absolute;
+            font-size: 20px;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        .flower-1 {
+            bottom: 20px;
+            left: 40px;
+        }
+
+        .flower-2 {
+            bottom: 30px;
+            right: 50px;
+            animation-delay: 1.5s;
+        }
+
+        .cute-box {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .box-body {
+            font-size: 48px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .box-lid {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 10px;
+            background: linear-gradient(135deg, #ff7675 0%, #fd79a8 100%);
+            border-radius: 5px;
+            animation: lidOpen 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes rainbowGlow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes lidOpen {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            50% { transform: translateX(-50%) rotate(-15deg); }
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            color: #fd79a8;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .empty-state .hint {
+            font-size: 0.9rem;
+            color: #ffa502;
+            margin-top: 15px;
+            padding: 10px 15px;
+            background: rgba(255, 165, 2, 0.1);
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                padding: 12px 20px;
+            }
+
+            .stats {
+                padding: 12px 15px;
+            }
+
+            .stat-number {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 我的待办清单</h1>
+        
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 搜索任务...">
+            <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="todoInput" placeholder="今天要做什么？">
+            <input type="text" id="tagInput" class="tag-input" placeholder="🏷️ 标签">
+            <div class="priority-btns">
+                <button class="priority-btn priority-high" data-priority="high">🔴 高</button>
+                <button class="priority-btn priority-medium active" data-priority="medium">🟠 中</button>
+                <button class="priority-btn priority-low" data-priority="low">🟢 低</button>
+            </div>
+            <button id="addBtn">➕ 添加任务</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">总任务</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="activeCount">0</div>
+                <div class="stat-label">未完成</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="completedCount">0</div>
+                <div class="stat-label">已完成</div>
+            </div>
+            <div class="btn-group">
+                <button class="clear-btn" id="clearBtn">🗑️ 清空已完成</button>
+                <button class="clear-btn" id="clearAllBtn" style="background: #dc3545; margin-left: 5px;">🗑️ 全部清空</button>
+                <button class="clear-btn export-btn" id="exportBtn" style="margin-left: 5px;">📤 导出</button>
+            </div>
+        </div>
+
+        <div id="tagFilters" class="tag-filters"></div>
+
+        <ul class="todo-list" id="todoList">
+            <div class="empty-state">
+                <div class="cute-illustration">
+                    <div class="cloud cloud-1"></div>
+                    <div class="cloud cloud-2"></div>
+                    <div class="rainbow"></div>
+                    <div class="star star-1">✨</div>
+                    <div class="star star-2">⭐</div>
+                    <div class="star star-3">🌟</div>
+                    <div class="flower flower-1">🌸</div>
+                    <div class="flower flower-2">🌼</div>
+                    <div class="cute-box">
+                        <div class="box-lid"></div>
+                        <div class="box-body">📋</div>
+                    </div>
+                </div>
+                <h3>� 空空如也 🌸</h3>
+                <p>还没有任务呢~ 快来添加你的第一个任务吧！</p>
+                <p class="hint">💡 小贴士：设置优先级可以更好地管理时间哦！</p>
+            </div>
+        </ul>
+    </div>
+
+    <script>
+        const todoInput = document.getElementById('todoInput');
+        const tagInput = document.getElementById('tagInput');
+        const searchInput = document.getElementById('searchInput');
+        const priorityBtns = document.querySelectorAll('.priority-btn');
+        const addBtn = document.getElementById('addBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const todoList = document.getElementById('todoList');
+        const tagFilters = document.getElementById('tagFilters');
+        const totalCount = document.getElementById('totalCount');
+        const activeCount = document.getElementById('activeCount');
+        const completedCount = document.getElementById('completedCount');
+        
+        let currentPriority = 'medium';
+        let currentSearch = '';
+        let currentTagFilter = '';
+
+        const STORAGE_KEY = 'todo-app-data';
+
+        let todos = [];
+
+        function loadTodos() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                todos = JSON.parse(saved);
+            }
+            renderTodos();
+        }
+
+        function saveTodos() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+
+        function getPriorityText(priority) {
+            const texts = { high: '高', medium: '中', low: '低' };
+            return texts[priority] || '中';
+        }
+
+        function getFilteredTodos() {
+            let filtered = [...todos];
+            
+            if (currentSearch) {
+                const searchLower = currentSearch.toLowerCase();
+                filtered = filtered.filter(todo => 
+                    todo.text.toLowerCase().includes(searchLower) ||
+                    (todo.tag && todo.tag.toLowerCase().includes(searchLower))
+                );
+            }
+            
+            if (currentTagFilter) {
+                filtered = filtered.filter(todo => todo.tag === currentTagFilter);
+            }
+            
+            return filtered;
+        }
+
+        function renderTagFilters() {
+            const tags = [...new Set(todos.map(todo => todo.tag).filter(Boolean))];
+            
+            if (tags.length === 0) {
+                tagFilters.innerHTML = '';
+                return;
+            }
+
+            let html = '<div style="margin-bottom: 15px; font-size: 14px; color: #666;">标签筛选：</div>';
+            html += `<span class="tag-badge ${!currentTagFilter ? 'active' : ''}" data-tag="">全部</span>`;
+            tags.forEach(tag => {
+                const count = todos.filter(t => t.tag === tag).length;
+                html += `<span class="tag-badge ${currentTagFilter === tag ? 'active' : ''}" data-tag="${tag}">${tag} (${count})</span>`;
+            });
+            tagFilters.innerHTML = html;
+        }
+
+        function renderTodos() {
+            todoList.innerHTML = '';
+            const filteredTodos = getFilteredTodos();
+
+            if (filteredTodos.length === 0) {
+                if (todos.length === 0) {
+                    todoList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="cute-illustration">
+                                <div class="cloud cloud-1"></div>
+                                <div class="cloud cloud-2"></div>
+                                <div class="rainbow"></div>
+                                <div class="star star-1">✨</div>
+                                <div class="star star-2">⭐</div>
+                                <div class="star star-3">🌟</div>
+                                <div class="flower flower-1">🌸</div>
+                                <div class="flower flower-2">🌼</div>
+                                <div class="cute-box">
+                                    <div class="box-lid"></div>
+                                    <div class="box-body">📋</div>
+                                </div>
+                            </div>
+                            <h3>� 空空如也 🌸</h3>
+                            <p>还没有任务呢~ 快来添加你的第一个任务吧！</p>
+                            <p class="hint">💡 小贴士：设置优先级和标签可以更好地管理时间哦！</p>
+                        </div>
+                    `;
+                } else {
+                    todoList.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+                            <h3>😕 没有找到匹配的任务</h3>
+                            <p>试试其他搜索关键词或取消标签筛选</p>
+                        </div>
+                    `;
+                }
+            } else {
+                filteredTodos.forEach((todo, index) => {
+                    const originalIndex = todos.findIndex(t => t.text === todo.text && t.priority === todo.priority);
+                    const priority = todo.priority || 'medium';
+                    const li = document.createElement('li');
+                    li.className = `todo-item priority-${priority} ${todo.completed ? 'completed' : ''}`;
+                    li.innerHTML = `
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} data-index="${originalIndex}">
+                        <span class="priority-badge ${priority}">${getPriorityText(priority)}</span>
+                        <span class="todo-text">${escapeHtml(todo.text)}</span>
+                        ${todo.tag ? `<span class="tag-badge" style="background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);">🏷️ ${todo.tag}</span>` : ''}
+                        <button class="edit-btn" data-index="${originalIndex}">✏️ 编辑</button>
+                        <button class="delete-btn" data-index="${originalIndex}">删除</button>
+                    `;
+                    todoList.appendChild(li);
+                });
+            }
+
+            updateStats();
+            renderTagFilters();
+        }
+
+        function updateStats() {
+            const total = todos.length;
+            const completed = todos.filter(todo => todo.completed).length;
+            const active = total - completed;
+
+            totalCount.textContent = total;
+            activeCount.textContent = active;
+            completedCount.textContent = completed;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setPriority(priority) {
+            currentPriority = priority;
+            priorityBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.priority === priority) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (!text) return;
+
+            todos.push({
+                text: text,
+                completed: false,
+                priority: currentPriority,
+                tag: tagInput.value.trim() || null
+            });
+
+            todoInput.value = '';
+            tagInput.value = '';
+            setPriority('medium');
+            saveTodos();
+            renderTodos();
+        }
+
+        function exportTodos() {
+            if (todos.length === 0) {
+                alert('📭 没有任务可以导出！');
+                return;
+            }
+
+            let content = `📝 我的待办清单\n\n`;
+            content += `📅 导出时间: ${new Date().toLocaleString('zh-CN')}\n`;
+            content += `📊 任务总数: ${todos.length}\n`;
+            content += `✅ 已完成: ${todos.filter(t => t.completed).length}\n`;
+            content += `🔄 未完成: ${todos.filter(t => !t.completed).length}\n\n`;
+            content += `──────────────────────────────\n\n`;
+
+            todos.forEach((todo, index) => {
+                const status = todo.completed ? '✅' : '🔲';
+                const priority = getPriorityText(todo.priority);
+                const tag = todo.tag ? ` [${todo.tag}]` : '';
+                content += `${index + 1}. ${status} ${todo.text} (${priority}${tag})\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `待办清单_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('📥 任务已导出成功！');
+        }
+
+        function toggleTodo(index) {
+            todos[index].completed = !todos[index].completed;
+            saveTodos();
+            renderTodos();
+        }
+
+        function deleteTodo(index) {
+            const todoItems = document.querySelectorAll('.todo-item');
+            if (todoItems[index]) {
+                todoItems[index].classList.add('deleting');
+                setTimeout(() => {
+                    todos.splice(index, 1);
+                    saveTodos();
+                    renderTodos();
+                }, 300);
+            }
+        }
+
+        function clearCompleted() {
+            todos = todos.filter(todo => !todo.completed);
+            saveTodos();
+            renderTodos();
+        }
+
+        function clearAll() {
+            if (todos.length === 0) return;
+            
+            if (confirm('⚠️ 确定要清空所有任务吗？此操作无法撤销！')) {
+                todos = [];
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function editTodo(index) {
+            const todo = todos[index];
+            const newText = prompt('编辑任务内容:', todo.text);
+            if (newText !== null && newText.trim()) {
+                todos[index].text = newText.trim();
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function handleSearch() {
+            currentSearch = searchInput.value.trim();
+            renderTodos();
+        }
+
+        function handleTagFilter(tag) {
+            currentTagFilter = tag;
+            renderTodos();
+        }
+
+        addBtn.addEventListener('click', addTodo);
+        clearBtn.addEventListener('click', clearCompleted);
+        clearAllBtn.addEventListener('click', clearAll);
+        exportBtn.addEventListener('click', exportTodos);
+
+        priorityBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setPriority(btn.dataset.priority);
+            });
+        });
+
+        searchInput.addEventListener('input', handleSearch);
+        
+        tagFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tag-badge')) {
+                handleTagFilter(e.target.dataset.tag);
+            }
+        });
+
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+
+        todoList.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const index = parseInt(e.target.dataset.index);
+                toggleTodo(index);
+            }
+        });
+
+        todoList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const index = parseInt(e.target.dataset.index);
+                deleteTodo(index);
+            } else if (e.target.classList.contains('edit-btn')) {
+                const index = parseInt(e.target.dataset.index);
+                editTodo(index);
+            }
+        });
+
+        loadTodos();
+    </script>
+</body>
+</html>
